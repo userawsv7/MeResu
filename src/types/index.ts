@@ -8,6 +8,9 @@ export interface ProfileData {
   additionalInfo: Record<string, any>;
   education?: string;
   certifications?: string[];
+  email?: string;
+  location?: string;
+  summary?: string;
 }
 
 export interface Message {
