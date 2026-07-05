@@ -1,0 +1,58 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 248, 250, 252;
+  --background-end-rgb: 241, 245, 249;
+}
+
+body {
+  color: rgb(var(--foreground-rgb));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+/* Chat bubble styles */
+.chat-bubble-ai {
+  @apply bg-white shadow-sm border border-gray-100 rounded-2xl rounded-tl-sm px-4 py-3 max-w-[80%];
+}
+
+.chat-bubble-user {
+  @apply bg-primary-500 text-white rounded-2xl rounded-tr-sm px-4 py-3 max-w-[80%] ml-auto;
+}
+
+/* Option buttons */
+.option-button {
+  @apply px-4 py-2 bg-white hover:bg-primary-50 border border-gray-200 hover:border-primary-300 rounded-lg text-sm transition-all duration-200 ease-in-out hover:shadow-sm;
+}
+
+.option-button.selected {
+  @apply bg-primary-500 text-white border-primary-500 hover:bg-primary-600;
+}
+
+/* Progress bar */
+.progress-bar {
+  transition: width 0.5s ease-in-out;
+}
+
+/* Resume preview */
+.resume-preview {
+  @apply bg-white shadow-xl rounded-lg p-8 max-w-[210mm] mx-auto;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* Smooth animations */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.message-enter {
+  animation: fadeIn 0.3s ease-out forwards;
+}
