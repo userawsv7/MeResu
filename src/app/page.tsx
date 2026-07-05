@@ -40,7 +40,7 @@ export default function MeResu() {
     jobDescription: '',
     additionalInfo: {},
   });
-  const [currentStep, setCurrentStep] = useState<'country' | 'email' | 'skills' | 'education' | 'experience' | 'roles' | 'preferred-roles' | 'summary' | 'confirm' | 'complete'>('country');
+  const [currentStep, setCurrentStep] = useState<'country' | 'email' | 'skills' | 'education' | 'experience' | 'roles' | 'preferred-roles' | 'summary' | 'confirm' | 'complete' | 'template'>('country');
   const [selectedTemplate, setSelectedTemplate] = useState<'classic' | 'modern'>('classic');
   const [isGenerating, setIsGenerating] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
@@ -176,10 +176,7 @@ export default function MeResu() {
     }
 
     if (option.value === 'proceed') {
-      if (profile.skills.length === 0) {
-        addMessage("Please select at least 1 skill or skip to continue:", 'assistant');
-        return;
-      }
+      // Allow proceeding with any number of skills including 0
       addMessage(`Great! Selected ${profile.skills.length} skills. Now, what's your education level?`, 'assistant');
       const educationOptions: Option[] = [
         { id: 'hs', label: 'High School', value: 'High School' },
@@ -431,7 +428,7 @@ Professional experience in ${profile.preferredRoles.join(', ') || 'IT roles'}.`;
       ];
       setCurrentOptions(expOptions);
       setCurrentStep('experience');
-    } else if (currentStep === 'template' && currentOptions.length === 0) {
+    } else if (currentStep === 'template') {
       setProfile(prev => ({ ...prev, jobDescription: userInput }));
       await generateFinalResume();
     }

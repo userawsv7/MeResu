@@ -1,0 +1,2 @@
+- [Type Fix](FIXES.md) — Added missing 'template' step type to resolve build error
+- [Behavior Requirements](FIXES.md) — Skills/roles flow allows free selection + custom input + always-proceed option
