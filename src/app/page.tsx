@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, Download, RefreshCw, CheckCircle } from 'lucide-react';
+import { Send, Download, RefreshCw, CheckCircle, Copy } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import ResumePreview from '@/components/ResumePreview';
@@ -237,7 +237,18 @@ export default function MeResu() {
       setCurrentOptions(finalOptions);
       setCurrentStep('complete');
     } catch (error) {
-      toast.error('Failed to generate resume. Please try again.');
+      // Fallback is now handled in generateResume, so this should rarely trigger
+      const fallbackContent = `PROFESSIONAL SUMMARY
+Results-driven professional with ${profile.experience || 0}+ years of experience.
+
+SKILLS
+${profile.skills.join(', ') || 'Technical skills'}
+
+EXPERIENCE
+Professional experience in ${profile.preferredRoles.join(', ') || 'IT roles'}.`;
+      setResumeContent(fallbackContent);
+      setShowPreview(true);
+      addMessage("Your basic resume template is ready. You can customize it further.", 'assistant');
     }
     setIsGenerating(false);
   };
@@ -318,6 +329,24 @@ export default function MeResu() {
         };
         (html2pdf as any).default().from(element).set(opt).save();
       });
+    }
+  };
+
+  const handleCopyToClipboard = async () => {
+    if (resumeContent) {
+      try {
+        await navigator.clipboard.writeText(resumeContent);
+        toast.success('Resume copied to clipboard!');
+      } catch (error) {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = resumeContent;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        toast.success('Resume copied to clipboard!');
+      }
     }
   };
 
@@ -486,6 +515,12 @@ export default function MeResu() {
                       className="px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
                     >
                       Switch to {selectedTemplate === 'classic' ? 'Modern' : 'Classic'}
+                    </button>
+                    <button
+                      onClick={handleCopyToClipboard}
+                      className="flex items-center gap-2 px-3 py-1 text-sm border border-gray-200 rounded-lg hover:bg-gray-50"
+                    >
+                      <Copy size={16} /> Copy Text
                     </button>
                     <button
                       onClick={handleDownload}
