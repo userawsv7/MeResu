@@ -74,7 +74,6 @@ export default function MeResu() {
         handleCountrySelection(option);
         break;
       case 'email':
-        // Email handled via text input
         break;
       case 'skills':
         await handleSkillSelection(option);
@@ -110,6 +109,7 @@ export default function MeResu() {
     const nextMessage = `Perfect! 📍 Now, what's your email address? (We'll add it to your resume header)`;
     addMessage(nextMessage, 'assistant');
     setCurrentStep('email');
+    setCurrentOptions([]);
   };
 
   const handleEmailInput = (email: string) => {
@@ -176,7 +176,6 @@ export default function MeResu() {
     }
 
     if (option.value === 'proceed') {
-      // Allow proceeding with any number of skills including 0
       addMessage(`Great! Selected ${profile.skills.length} skills. Now, what's your education level?`, 'assistant');
       const educationOptions: Option[] = [
         { id: 'hs', label: 'High School', value: 'High School' },
@@ -196,7 +195,6 @@ export default function MeResu() {
 
     if (updatedSkills.length < 4) {
       const remainingOptions = currentOptions.filter(o => o.id !== option.id && o.value !== 'proceed');
-      // Add proceed option after first skill
       if (updatedSkills.length >= 1) {
         remainingOptions.push({ id: 'proceed', label: '✅ Proceed with these skills', value: 'proceed' });
       }
@@ -223,7 +221,6 @@ export default function MeResu() {
 
     addMessage("Great! 💼 Based on your skills, here are target roles. Select preferred:", 'assistant');
 
-    // Generate role suggestions based on skills
     const skillBasedRoles: Option[] = [
       { id: 'se', label: 'Software Engineer', value: 'Software Engineer' },
       { id: 'fsd', label: 'Full Stack Developer', value: 'Full Stack Developer' },
@@ -280,7 +277,6 @@ export default function MeResu() {
     setProfile(prev => ({ ...prev, roles: updatedRoles }));
 
     const remainingOptions = currentOptions.filter(o => o.id !== option.id);
-    // Add proceed option after first role
     if (!remainingOptions.find(o => o.value === 'proceed')) {
       remainingOptions.push({ id: 'proceed-roles', label: '✅ Proceed', value: 'proceed' });
     }
@@ -320,12 +316,10 @@ export default function MeResu() {
       addMessage("AI will generate a compelling summary using your profile data. Generating resume...", 'assistant');
     }
 
-    // Generate resume with collected data
     await generateFinalResume();
   };
 
   const handleConfirmSelection = async (option: Option) => {
-    // Show final confirmation options
     if (option.value === 'edit') {
       addMessage("What would you like to change?", 'assistant');
       setCurrentOptions([]);
@@ -355,7 +349,6 @@ export default function MeResu() {
       setCurrentOptions(finalOptions);
       setCurrentStep('complete');
     } catch (error) {
-      // Fallback is now handled in generateResume, so this should rarely trigger
       const fallbackContent = `PROFESSIONAL SUMMARY
 Results-driven professional with ${profile.experience || 0}+ years of experience.
 
@@ -378,59 +371,90 @@ Professional experience in ${profile.preferredRoles.join(', ') || 'IT roles'}.`;
     addMessage(userInput, 'user');
     setInput('');
 
-    if (currentStep === 'skills' && profile.skills.length === 0) {
-      const skills = userInput.split(',').map(s => s.trim());
-      setProfile(prev => ({ ...prev, skills }));
+    // Handle email step - this was missing!
+    if (currentStep === 'email') {
+      handleEmailInput(userInput);
+      return;
+    }
 
-      addMessage("Based on your skills, generating role suggestions...", 'assistant');
-      setIsGenerating(true);
+    // Handle custom skills input (from "other" option)
+    if (currentStep === 'skills') {
+      const skills = userInput.split(',').map(s => s.trim()).filter(s => s.length > 0);
+      const updatedSkills = [...profile.skills, ...skills];
+      setProfile(prev => ({ ...prev, skills: updatedSkills }));
 
-      try {
-        const roles = await generateAIResponse(
-          `Based on these skills: ${skills.join(', ')}, suggest 6 relevant IT job roles. Return only the role names separated by commas.`,
-          process.env.NEXT_PUBLIC_GROQ_API_KEY || ''
-        );
-
-        const roleOptions: Option[] = roles.split(',').slice(0, 6).map((role, index) => ({
-          id: `role-${index}`,
-          label: role.trim(),
-          value: role.trim(),
-        }));
-        roleOptions.push({ id: 'other-role', label: '➕ Other (type your roles)', value: 'other' });
-
-        setCurrentOptions(roleOptions);
-        setCurrentStep('roles');
-      } catch (error) {
-        const defaultRoles: Option[] = [
-          { id: 'se', label: 'Software Engineer', value: 'Software Engineer' },
-          { id: 'fsd', label: 'Full Stack Developer', value: 'Full Stack Developer' },
-          { id: 'fe', label: 'Frontend Developer', value: 'Frontend Developer' },
-          { id: 'be', label: 'Backend Developer', value: 'Backend Developer' },
-          { id: 'da', label: 'Data Analyst', value: 'Data Analyst' },
-          { id: 'de', label: 'DevOps Engineer', value: 'DevOps Engineer' },
-          { id: 'other-role', label: '➕ Other', value: 'other' },
-        ];
-        setCurrentOptions(defaultRoles);
-        setCurrentStep('roles');
-      }
-      setIsGenerating(false);
-    } else if (currentStep === 'roles') {
-      const roles = userInput.split(',').map(r => r.trim());
-      setProfile(prev => ({ ...prev, preferredRoles: roles }));
-
-      addMessage("How many years of experience do you have?", 'assistant');
-      const expOptions: Option[] = [
-        { id: '0-1', label: '0-1 years (Entry Level)', value: '0-1' },
-        { id: '1-3', label: '1-3 years (Junior)', value: '1-3' },
-        { id: '3-5', label: '3-5 years (Mid-level)', value: '3-5' },
-        { id: '5-8', label: '5-8 years (Senior)', value: '5-8' },
-        { id: '8+', label: '8+ years (Lead/Principal)', value: '8+' },
+      addMessage(`Added skills! Now let's move to education. What's your highest education level?`, 'assistant');
+      const educationOptions: Option[] = [
+        { id: 'hs', label: 'High School', value: 'High School' },
+        { id: 'bs', label: 'Bachelor\'s Degree', value: 'Bachelor\'s Degree' },
+        { id: 'ms', label: 'Master\'s Degree', value: 'Master\'s Degree' },
+        { id: 'phd', label: 'PhD/Doctorate', value: 'PhD/Doctorate' },
+        { id: 'other-edu', label: '➕ Other', value: 'other' },
+        { id: 'skip-edu', label: '⏭️ Skip', value: 'skip' },
       ];
-      setCurrentOptions(expOptions);
-      setCurrentStep('experience');
-    } else if (currentStep === 'template') {
+      setCurrentOptions(educationOptions);
+      setCurrentStep('education');
+      return;
+    }
+
+    // Handle custom roles input (from "other" option)
+    if (currentStep === 'roles') {
+      const roles = userInput.split(',').map(r => r.trim()).filter(r => r.length > 0);
+      const updatedRoles = [...profile.roles, ...roles];
+      setProfile(prev => ({ ...prev, roles: updatedRoles }));
+
+      addMessage("Got it! Would you like to specify preferred target roles for tailoring?", 'assistant');
+      const prefOptions: Option[] = [
+        { id: 'pref-se', label: 'Software Engineer', value: 'Software Engineer' },
+        { id: 'pref-fsd', label: 'Full Stack Developer', value: 'Full Stack Developer' },
+        { id: 'pref-fe', label: 'Frontend Developer', value: 'Frontend Developer' },
+        { id: 'pref-be', label: 'Backend Developer', value: 'Backend Developer' },
+        { id: 'pref-other', label: '➕ Other', value: 'other' },
+        { id: 'skip-pref', label: '⏭️ Skip', value: 'skip' },
+      ];
+      setCurrentOptions(prefOptions);
+      setCurrentStep('preferred-roles');
+      return;
+    }
+
+    // Handle custom preferred role input
+    if (currentStep === 'preferred-roles') {
+      const roles = userInput.split(',').map(r => r.trim()).filter(r => r.length > 0);
+      const updatedPref = [...profile.preferredRoles, ...roles];
+      setProfile(prev => ({ ...prev, preferredRoles: updatedPref }));
+
+      addMessage("Would you like to add a professional summary or let AI generate one?", 'assistant');
+      const summaryOptions: Option[] = [
+        { id: 'ai-summary', label: '🤖 Let AI Generate Summary', value: 'ai' },
+        { id: 'custom-summary', label: '✍️ Type Custom Summary', value: 'custom' },
+        { id: 'skip-summary', label: '⏭️ Skip Summary', value: 'skip' },
+      ];
+      setCurrentOptions(summaryOptions);
+      setCurrentStep('summary');
+      return;
+    }
+
+    // Handle custom summary input
+    if (currentStep === 'summary') {
+      setProfile(prev => ({ ...prev, additionalInfo: { ...prev.additionalInfo, customSummary: userInput } }));
+      addMessage("Thanks! Generating your resume...", 'assistant');
+      await generateFinalResume();
+      return;
+    }
+
+    // Handle edit resume input
+    if (currentStep === 'complete') {
+      setProfile(prev => ({ ...prev, additionalInfo: { ...prev.additionalInfo, editNotes: userInput } }));
+      addMessage("Thanks for the feedback! Regenerating your resume with the requested changes...", 'assistant');
+      await generateFinalResume();
+      return;
+    }
+
+    // Handle template/job description input
+    if (currentStep === 'template') {
       setProfile(prev => ({ ...prev, jobDescription: userInput }));
       await generateFinalResume();
+      return;
     }
   };
 
@@ -456,7 +480,6 @@ Professional experience in ${profile.preferredRoles.join(', ') || 'IT roles'}.`;
         await navigator.clipboard.writeText(resumeContent);
         toast.success('Resume copied to clipboard!');
       } catch (error) {
-        // Fallback for older browsers
         const textArea = document.createElement('textarea');
         textArea.value = resumeContent;
         document.body.appendChild(textArea);
@@ -498,7 +521,7 @@ Professional experience in ${profile.preferredRoles.join(', ') || 'IT roles'}.`;
         setShowJobSites(true);
         break;
       case 'edit':
-        addMessage("Sure! What would you like to change in your resume?", 'assistant');
+        addMessage("Sure! What would you like to change in your resume? Type your changes:", 'assistant');
         setCurrentOptions([]);
         break;
     }
