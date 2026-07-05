@@ -174,21 +174,15 @@ export default function MeResu() {
     const updatedRoles = [...profile.preferredRoles, option.value];
     setProfile(prev => ({ ...prev, preferredRoles: updatedRoles }));
 
-    if (updatedRoles.length < 2) {
+    // Allow 1 role selection then proceed, or skip to generate with skills
+    if (updatedRoles.length >= 1) {
       const remainingOptions = currentOptions.filter(o => o.id !== option.id);
-      setCurrentOptions(remainingOptions);
-    } else {
-      addMessage("Great! How many years of professional experience do you have?", 'assistant');
-
-      const expOptions: Option[] = [
-        { id: '0-1', label: '0-1 years (Entry Level)', value: '0-1' },
-        { id: '1-3', label: '1-3 years (Junior)', value: '1-3' },
-        { id: '3-5', label: '3-5 years (Mid-level)', value: '3-5' },
-        { id: '5-8', label: '5-8 years (Senior)', value: '5-8' },
-        { id: '8+', label: '8+ years (Lead/Principal)', value: '8+' },
-      ];
-      setCurrentOptions(expOptions);
-      setCurrentStep('experience');
+      // Keep "Other" option but limit to just 2 clicks total
+      if (updatedRoles.length >= 2) {
+        await generateFinalResume();
+      } else {
+        setCurrentOptions(remainingOptions);
+      }
     }
   };
 
