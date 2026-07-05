@@ -79,8 +79,14 @@ export default function MeResu() {
       case 'roles':
         await handleRoleSelection(option);
         break;
+      case 'experience':
+        await handleExperienceSelection(option);
+        break;
       case 'template':
-        handleTemplateSelection(option);
+        await handleTemplateSelection(option);
+        break;
+      case 'complete':
+        handleFinalOption(option);
         break;
     }
   };
@@ -92,7 +98,6 @@ export default function MeResu() {
     const nextMessage = `Great! Now, let's build your profile. What are your technical skills? Please select all that apply:`;
     addMessage(nextMessage, 'assistant');
 
-    // Get IT skills options
     const skillsOptions: Option[] = [
       { id: 'js', label: 'JavaScript/TypeScript', value: 'JavaScript/TypeScript' },
       { id: 'py', label: 'Python', value: 'Python' },
@@ -119,15 +124,12 @@ export default function MeResu() {
     const updatedSkills = [...profile.skills, option.value];
     setProfile(prev => ({ ...prev, skills: updatedSkills }));
 
-    const completeness = calculateCompleteness({ ...profile, skills: updatedSkills });
-
     if (updatedSkills.length < 3) {
       const remainingOptions = currentOptions.filter(o => o.id !== option.id);
       setCurrentOptions(remainingOptions);
     } else {
       addMessage(`Excellent! You have ${updatedSkills.length} skills. Now, based on your skills, here are recommended roles:`, 'assistant');
 
-      // Generate roles based on skills using Groq
       setIsGenerating(true);
       try {
         const roles = await generateAIResponse(
@@ -211,7 +213,6 @@ export default function MeResu() {
       return;
     }
 
-    // Generate resume
     await generateFinalResume();
   };
 
@@ -248,7 +249,6 @@ export default function MeResu() {
     addMessage(userInput, 'user');
     setInput('');
 
-    // Handle different input contexts
     if (currentStep === 'skills' && profile.skills.length === 0) {
       const skills = userInput.split(',').map(s => s.trim());
       setProfile(prev => ({ ...prev, skills }));
@@ -272,7 +272,6 @@ export default function MeResu() {
         setCurrentOptions(roleOptions);
         setCurrentStep('roles');
       } catch (error) {
-        // Fallback roles
         const defaultRoles: Option[] = [
           { id: 'se', label: 'Software Engineer', value: 'Software Engineer' },
           { id: 'fsd', label: 'Full Stack Developer', value: 'Full Stack Developer' },
@@ -317,7 +316,7 @@ export default function MeResu() {
           html2canvas: { scale: 2 },
           jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
-        html2pdf.default().from(element).set(opt).save();
+        (html2pdf as any).default().from(element).set(opt).save();
       });
     }
   };
@@ -362,7 +361,6 @@ export default function MeResu() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
       <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
@@ -401,7 +399,6 @@ export default function MeResu() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Chat Interface */}
           <div className="bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col h-[700px]">
             <div className="p-4 border-b border-gray-100">
               <h2 className="font-semibold text-gray-900">Chat with Me-Resu</h2>
@@ -435,7 +432,6 @@ export default function MeResu() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Options */}
             {currentOptions.length > 0 && (
               <div className="p-4 border-t border-gray-100">
                 <p className="text-xs text-gray-500 mb-2">Select an option:</p>
@@ -453,7 +449,6 @@ export default function MeResu() {
               </div>
             )}
 
-            {/* Input */}
             <div className="p-4 border-t border-gray-100">
               <div className="flex gap-2">
                 <input
@@ -480,7 +475,6 @@ export default function MeResu() {
             </div>
           </div>
 
-          {/* Preview Area */}
           <div className="space-y-4">
             {showPreview && resumeContent ? (
               <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4">
